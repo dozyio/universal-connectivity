@@ -3,19 +3,28 @@ import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { CHAT_FILE_TOPIC, CHAT_TOPIC, FILE_EXCHANGE_PROTOCOL } from '@/lib/constants'
 import { ChatFile, ChatMessage, useChatContext } from '../context/chat-ctx'
 import { v4 as uuidv4 } from 'uuid'
-import { MessageComponent } from './message'
+import { Message } from './message'
 import { forComponent } from '@/lib/logger'
 import { ChatPeerList } from './chat-peer-list'
+import { ChevronLeftIcon } from '@heroicons/react/20/solid'
+import Blockies from 'react-18-blockies'
+import { directMessageRequest } from './direct-message'
 
 const log = forComponent('chat')
 
+export const PUBLIC_CHAT_ROOM_ID = ''
+const PUBLIC_CHAT_ROOM_NAME = 'Public Chat'
+
 export default function ChatContainer() {
   const { libp2p } = useLibp2pContext()
-  const { messageHistory, setMessageHistory, files, setFiles } = useChatContext()
+  const { roomId, setRoomId } = useChatContext()
+  const { messageHistory, setMessageHistory, directMessages, setDirectMessages, files, setFiles } = useChatContext()
   const [input, setInput] = useState<string>('')
   const fileRef = useRef<HTMLInputElement>(null)
+  const [messages, setMessages] = useState<ChatMessage[]>([])
 
-  const sendMessage = useCallback(async () => {
+  // Send message to public chat over gossip
+  const sendPublicMessage = useCallback(async () => {
     if (input === '') return
 
     log(
@@ -33,10 +42,61 @@ export default function ChatContainer() {
 
     setMessageHistory([
       ...messageHistory,
-      { msg: input, fileObjectUrl: undefined, from: 'me', peerId: myPeerId },
+      {
+        msgId: crypto.randomUUID(),
+        msg: input,
+        fileObjectUrl: undefined,
+        from: 'me',
+        peerId: myPeerId,
+        read: true,
+        receivedAt: Date.now(),
+      },
     ])
+
     setInput('')
   }, [input, messageHistory, setInput, libp2p, setMessageHistory])
+
+  // Send direct message over custom protocol
+  const sendDirectMessage = useCallback(async () => {
+    try {
+      const res = await directMessageRequest({
+        libp2p,
+        peer: roomId,
+        message: input,
+      })
+
+      if (!res) {
+        console.error('Failed to send message')
+        return
+      }
+
+      const myPeerId = libp2p.peerId.toString()
+
+      const newMessage: ChatMessage = {
+        msgId: crypto.randomUUID(),
+        msg: input,
+        fileObjectUrl: undefined,
+        from: 'me',
+        peerId: myPeerId,
+        read: true,
+        receivedAt: Date.now(),
+      }
+
+      const updatedMessages = directMessages[roomId]
+        ? [...directMessages[roomId], newMessage]
+        : [newMessage]
+
+      setDirectMessages({
+        ...directMessages,
+        [roomId]: updatedMessages,
+      })
+
+      setInput('')
+    } catch (e: any) {
+      console.error(e)
+    }
+  }, [libp2p, setDirectMessages, directMessages, roomId, input])
+
 
   const sendFile = useCallback(
     async (readerEvent: ProgressEvent<FileReader>) => {
@@ -62,10 +122,13 @@ export default function ChatContainer() {
       )
 
       const msg: ChatMessage = {
+        msgId: crypto.randomUUID(),
         msg: newChatFileMessage(file.id, file.body),
         fileObjectUrl: window.URL.createObjectURL(new Blob([file.body])),
         from: 'me',
         peerId: myPeerId,
+        read: true,
+        receivedAt: Date.now(),
       }
       setMessageHistory([...messageHistory, msg])
     },
@@ -81,16 +144,26 @@ export default function ChatContainer() {
       if (e.key !== 'Enter') {
         return
       }
-      sendMessage()
+      if (roomId === PUBLIC_CHAT_ROOM_ID) {
+        sendPublicMessage()
+      } else {
+        sendDirectMessage()
+      }
     },
-    [sendMessage],
+    [sendPublicMessage, sendDirectMessage, roomId],
   )
 
   const handleSend = useCallback(
     async (e: React.MouseEvent<HTMLButtonElement>) => {
-      sendMessage()
+      if (roomId === PUBLIC_CHAT_ROOM_ID) {
+        console.log('sending gossip message')
+        sendPublicMessage()
+      } else {
+        console.log('sending DM')
+        sendDirectMessage()
+      }
     },
-    [sendMessage],
+    [sendPublicMessage, sendDirectMessage, roomId],
   )
 
   const handleInput = useCallback(
@@ -120,27 +193,76 @@ export default function ChatContainer() {
     [fileRef],
   )
 
+  const handleBackToPublic = () => {
+    setRoomId(PUBLIC_CHAT_ROOM_ID)
+    setMessages(messageHistory)
+  }
+
+  useEffect(() => {
+    // assumes a chat room is a peerId thus a direct message
+    if (roomId === PUBLIC_CHAT_ROOM_ID) {
+      setMessages(messageHistory)
+    } else {
+      setMessages(directMessages[roomId] || [])
+    }
+  }, [roomId, directMessages, messageHistory])
+
+
   return (
     <div className="container mx-auto">
       <div className="min-w-full border rounded lg:grid lg:grid-cols-6">
         <div className="lg:col-span-5 lg:block">
           <div className="w-full">
             <div className="relative flex items-center p-3 border-b border-gray-300">
-              <span className="block ml-2 font-bold text-gray-600">Public Chat</span>
+              {roomId === PUBLIC_CHAT_ROOM_ID &&
+                <span className="block ml-2 font-bold text-gray-600">{PUBLIC_CHAT_ROOM_NAME}</span>
+              }
+              {roomId !== PUBLIC_CHAT_ROOM_ID && (
+                <>
+                  <Blockies
+                    seed={roomId}
+                    size={8}
+                    scale={3}
+                    className="rounded mr-2 max-h-10 max-w-10"
+                  />
+                  <span className={`text-gray-500 flex`}>
+                    {roomId.toString().slice(-7)}
+                  </span>
+                  <button
+                    onClick={handleBackToPublic}
+                    className="text-gray-500 flex ml-auto"
+                  >
+                    <ChevronLeftIcon className="w-6 h-6 text-gray-500" />
+                    <span>Back to Public Chat</span>
+                  </button>
+                </>
+              )}
             </div>
             <div className="relative w-full flex flex-col-reverse p-3 overflow-y-auto h-[40rem] bg-gray-100">
               <ul className="space-y-2">
-                {/* messages start */}
-                {messageHistory.map(({ msg, fileObjectUrl, from, peerId }, idx) => (
-                  <MessageComponent
-                    key={idx}
-                    msg={msg}
-                    fileObjectUrl={fileObjectUrl}
-                    from={from}
-                    peerId={peerId}
-                  />
-                ))}
-                {/* messages end */}
+                  {messages.map(
+                    ({
+                      msgId,
+                      msg,
+                      fileObjectUrl,
+                      from,
+                      peerId,
+                      read,
+                      receivedAt,
+                    }: ChatMessage) => (
+                      <Message
+                        key={msgId}
+                        dm={roomId !== ''}
+                        msg={msg}
+                        fileObjectUrl={fileObjectUrl}
+                        from={from}
+                        peerId={peerId}
+                        read={read}
+                        msgId={msgId}
+                        receivedAt={receivedAt}
+                      />
+                    ),
+                  )}
               </ul>
             </div>
 

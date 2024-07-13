@@ -4,7 +4,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "protobuf": "protons src/lib/protobuf/*.proto"
   },
   "dependencies": {
     "@chainsafe/libp2p-gossipsub": "^13.0.0",
@@ -30,6 +31,8 @@
     "it-pipe": "^3.0.1",
     "libp2p": "^1.6.1",
     "next": "14.2.3",
+    "protons": "^7.5.0",
+    "protons-runtime": "^5.4.0",
     "react": "18.3.1",
     "react-18-blockies": "^1.0.6",
     "react-dom": "18.3.1",
