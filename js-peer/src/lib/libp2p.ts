@@ -124,7 +124,7 @@ export async function startLibp2p(): Promise<Libp2p<{ pubsub: PubSub; identify: 
   //   dialWebRTCMaddrs(libp2p, multiaddrs)
   // })
 
-  return libp2p as Libp2p<{ pubsub: PubSub; identify: Identify }>
+  return libp2p
 }
 
 // message IDs are used to dedupe inbound messages
