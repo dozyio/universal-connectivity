@@ -1,5 +1,4 @@
 import { Libp2p, PeerId, Stream } from '@libp2p/interface'
-import { Uint8ArrayList } from 'uint8arraylist'
 import { DIRECT_MESSAGE_PROTOCOL } from '@/lib/constants'
 import { dm } from '@/lib/protobuf/direct-message'
 import { pbStream } from 'it-protobuf-stream'
@@ -10,7 +9,7 @@ interface Params {
   message: string
 }
 
-export const clientVersion = '0.0.1'
+export const dmVersion = '0.0.1'
 
 // directMessageRequest dials and sends a direct message to a peer.
 export const directMessageRequest = async ({
@@ -36,7 +35,7 @@ export const directMessageRequest = async ({
     const req: dm.DirectMessageRequest = {
       message: message,
       meta: {
-        clientVersion: clientVersion,
+        clientVersion: dmVersion,
         timestamp: BigInt(Date.now()),
       },
     }

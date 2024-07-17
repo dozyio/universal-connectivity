@@ -19,7 +19,7 @@ interface MenuItemProps {
   }
 }
 
-const QUERY = 'QUERY'
+const NO_PROTOCOLS = ''
 
 export function ProtocolMenuItem({ protocol, peerId, state }: MenuItemProps) {
   const { setRoomId } = useChatContext()
@@ -46,7 +46,7 @@ export function ProtocolMenuItem({ protocol, peerId, state }: MenuItemProps) {
     }
   }
 
-  if (protocol === QUERY) {
+  if (protocol === NO_PROTOCOLS) {
     return (
       <MenuItem>
         {({ focus }) => (
@@ -117,7 +117,7 @@ export function Peer({ peer, self, withName, withUnread }: PeerProps ) {
         setAllProtocols(p.protocols)
       } else {
         console.log('Peer not in peerStore', peer.toString())
-        setCommsProtocols([QUERY])
+        setCommsProtocols([NO_PROTOCOLS])
       }
     }
 

@@ -8,17 +8,11 @@ import { pipe } from 'it-pipe'
 import map from 'it-map'
 import * as lp from 'it-length-prefixed'
 import { forComponent } from '@/lib/logger'
-import { clientVersion } from '@/components/direct-message';
+import { dmVersion } from '@/components/direct-message'
 import { dm } from '@/lib/protobuf/direct-message'
-import { pbStream } from 'it-protobuf-stream';
+import { pbStream } from 'it-protobuf-stream'
 
 const log = forComponent('chat-context')
-
-export interface ChatFile {
-  id: string
-  body: Uint8Array
-  sender: string
-}
 
 export interface ChatMessage {
   msgId: string
@@ -30,11 +24,17 @@ export interface ChatMessage {
   receivedAt: number
 }
 
+export interface ChatFile {
+  id: string
+  body: Uint8Array
+  sender: string
+}
+
 export interface DirectMessages {
   [peerId: string]: ChatMessage[]
 }
 
-export type Chatroom = string
+type Chatroom = string
 
 export interface ChatContextInterface {
   messageHistory: ChatMessage[]
@@ -242,7 +242,7 @@ export const ChatProvider = ({ children }: any) => {
       const res: dm.DirectMessageResponse = {
         status: dm.Status.OK,
         meta: {
-          clientVersion: clientVersion,
+          clientVersion: dmVersion,
           timestamp: BigInt(Date.now()),
         },
       }

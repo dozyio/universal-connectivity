@@ -24,7 +24,7 @@ export default function ChatContainer() {
   const fileRef = useRef<HTMLInputElement>(null)
   const [messages, setMessages] = useState<ChatMessage[]>([])
 
-  // Send message to public chat over gossip
+  // Send message to public chat over gossipsub
   const sendPublicMessage = useCallback(async () => {
     if (input === '') return
 
@@ -67,7 +67,7 @@ export default function ChatContainer() {
       })
 
       if (!res) {
-        console.error('Failed to send message')
+        log('Failed to send message')
         return
       }
 
@@ -94,7 +94,7 @@ export default function ChatContainer() {
 
       setInput('')
     } catch (e: any) {
-      console.error(e)
+      log(e)
     }
   }, [libp2p, setDirectMessages, directMessages, roomId, input])
 
@@ -157,10 +157,8 @@ export default function ChatContainer() {
   const handleSend = useCallback(
     async (e: React.MouseEvent<HTMLButtonElement>) => {
       if (roomId === PUBLIC_CHAT_ROOM_ID) {
-        console.log('sending gossip message')
         sendPublicMessage()
       } else {
-        console.log('sending DM')
         sendDirectMessage()
       }
     },
