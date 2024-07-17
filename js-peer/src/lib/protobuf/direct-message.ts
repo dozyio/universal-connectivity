@@ -5,7 +5,6 @@
 /* eslint-disable @typescript-eslint/no-empty-interface */
 
 import { type Codec, decodeMessage, type DecodeOptions, encodeMessage, enumeration, message } from 'protons-runtime'
-import { alloc as uint8ArrayAlloc } from 'uint8arrays/alloc'
 import type { Uint8ArrayList } from 'uint8arraylist'
 
 export interface dm {}
@@ -58,21 +57,17 @@ export namespace dm {
     }
   }
 
-  export interface MessageData {
+  export interface Meta {
     clientVersion: string
     timestamp: bigint
-    id: string
-    nodeId: string
-    nodePubKey: Uint8Array
-    sign: Uint8Array
   }
 
-  export namespace MessageData {
-    let _codec: Codec<MessageData>
+  export namespace Meta {
+    let _codec: Codec<Meta>
 
-    export const codec = (): Codec<MessageData> => {
+    export const codec = (): Codec<Meta> => {
       if (_codec == null) {
-        _codec = message<MessageData>((obj, w, opts = {}) => {
+        _codec = message<Meta>((obj, w, opts = {}) => {
           if (opts.lengthDelimited !== false) {
             w.fork()
           }
@@ -87,37 +82,13 @@ export namespace dm {
             w.int64(obj.timestamp)
           }
 
-          if ((obj.id != null && obj.id !== '')) {
-            w.uint32(26)
-            w.string(obj.id)
-          }
-
-          if ((obj.nodeId != null && obj.nodeId !== '')) {
-            w.uint32(34)
-            w.string(obj.nodeId)
-          }
-
-          if ((obj.nodePubKey != null && obj.nodePubKey.byteLength > 0)) {
-            w.uint32(42)
-            w.bytes(obj.nodePubKey)
-          }
-
-          if ((obj.sign != null && obj.sign.byteLength > 0)) {
-            w.uint32(50)
-            w.bytes(obj.sign)
-          }
-
           if (opts.lengthDelimited !== false) {
             w.ldelim()
           }
         }, (reader, length, opts = {}) => {
           const obj: any = {
             clientVersion: '',
-            timestamp: 0n,
-            id: '',
-            nodeId: '',
-            nodePubKey: uint8ArrayAlloc(0),
-            sign: uint8ArrayAlloc(0)
+            timestamp: 0n
           }
 
           const end = length == null ? reader.len : reader.pos + length
@@ -134,22 +105,6 @@ export namespace dm {
                 obj.timestamp = reader.int64()
                 break
               }
-              case 3: {
-                obj.id = reader.string()
-                break
-              }
-              case 4: {
-                obj.nodeId = reader.string()
-                break
-              }
-              case 5: {
-                obj.nodePubKey = reader.bytes()
-                break
-              }
-              case 6: {
-                obj.sign = reader.bytes()
-                break
-              }
               default: {
                 reader.skipType(tag & 7)
                 break
@@ -164,12 +119,12 @@ export namespace dm {
       return _codec
     }
 
-    export const encode = (obj: Partial<MessageData>): Uint8Array => {
-      return encodeMessage(obj, MessageData.codec())
+    export const encode = (obj: Partial<Meta>): Uint8Array => {
+      return encodeMessage(obj, Meta.codec())
     }
 
-    export const decode = (buf: Uint8Array | Uint8ArrayList, opts?: DecodeOptions<MessageData>): MessageData => {
-      return decodeMessage(buf, MessageData.codec(), opts)
+    export const decode = (buf: Uint8Array | Uint8ArrayList, opts?: DecodeOptions<Meta>): Meta => {
+      return decodeMessage(buf, Meta.codec(), opts)
     }
   }
 
@@ -192,7 +147,7 @@ export namespace dm {
   }
 
   export interface DirectMessageRequest {
-    messageData?: dm.MessageData
+    meta?: dm.Meta
     message: string
   }
 
@@ -206,9 +161,9 @@ export namespace dm {
             w.fork()
           }
 
-          if (obj.messageData != null) {
+          if (obj.meta != null) {
             w.uint32(10)
-            dm.MessageData.codec().encode(obj.messageData, w)
+            dm.Meta.codec().encode(obj.meta, w)
           }
 
           if ((obj.message != null && obj.message !== '')) {
@@ -231,8 +186,8 @@ export namespace dm {
 
             switch (tag >>> 3) {
               case 1: {
-                obj.messageData = dm.MessageData.codec().decode(reader, reader.uint32(), {
-                  limits: opts.limits?.messageData
+                obj.meta = dm.Meta.codec().decode(reader, reader.uint32(), {
+                  limits: opts.limits?.meta
                 })
                 break
               }
@@ -264,7 +219,7 @@ export namespace dm {
   }
 
   export interface DirectMessageResponse {
-    messageData?: dm.MessageData
+    meta?: dm.Meta
     status: dm.Status
     statusText?: string
   }
@@ -279,9 +234,9 @@ export namespace dm {
             w.fork()
           }
 
-          if (obj.messageData != null) {
+          if (obj.meta != null) {
             w.uint32(10)
-            dm.MessageData.codec().encode(obj.messageData, w)
+            dm.Meta.codec().encode(obj.meta, w)
           }
 
           if (obj.status != null && __StatusValues[obj.status] !== 0) {
@@ -309,8 +264,8 @@ export namespace dm {
 
             switch (tag >>> 3) {
               case 1: {
-                obj.messageData = dm.MessageData.codec().decode(reader, reader.uint32(), {
-                  limits: opts.limits?.messageData
+                obj.meta = dm.Meta.codec().decode(reader, reader.uint32(), {
+                  limits: opts.limits?.meta
                 })
                 break
               }

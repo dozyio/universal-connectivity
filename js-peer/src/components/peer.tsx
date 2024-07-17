@@ -120,7 +120,7 @@ export function Peer({ peer, self, withName, withUnread }: PeerProps ) {
         <MenuButton className="inline-flex w-full justify-center rounded-md text-sm font-semibold text-gray-900">
 
       <Blockies seed={peer.toString()} size={15} scale={3} className="rounded max-h-10 max-w-10" />
-      {withName && 
+      {withName &&
         <div className="w-full">
           <div className="flex justify-between">
             <span className={`block ml-2 font-semibold ${self ? 'text-indigo-700-600' : 'text-gray-600'}`}>

@@ -233,7 +233,7 @@ export const ChatProvider = ({ children }: any) => {
           let reqData
 
           for await (const chunk of source) {
-            reqData = await directMessageRequestProcessChunk(chunk, connection)
+            reqData = await directMessageRequestProcessChunk(chunk)
           }
 
           const eventDetails = {
@@ -255,7 +255,6 @@ export const ChatProvider = ({ children }: any) => {
 
       await pipe(
         [signedEncodedRes], // array of Uint8Array to send
-        toBuffer, // convert strings (or other data) into Buffer before sending
         stream.sink, // Sink, write data to the stream
       )
     })

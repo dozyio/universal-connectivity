@@ -9,6 +9,7 @@ import { ChatPeerList } from './chat-peer-list'
 import { ChevronLeftIcon } from '@heroicons/react/20/solid'
 import Blockies from 'react-18-blockies'
 import { directMessageRequest } from './direct-message'
+import { peerIdFromString } from '@libp2p/peer-id'
 
 const log = forComponent('chat')
 
@@ -61,7 +62,7 @@ export default function ChatContainer() {
     try {
       const res = await directMessageRequest({
         libp2p,
-        peer: roomId,
+        peerId: peerIdFromString(roomId),
         message: input,
       })
 

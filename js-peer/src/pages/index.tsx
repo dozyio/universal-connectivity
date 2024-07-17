@@ -1,7 +1,7 @@
 import Head from 'next/head'
 import Nav from '@/components/nav'
 import { useLibp2pContext } from '@/context/ctx'
-import type { PeerUpdate, Connection, IdentifyResult } from '@libp2p/interface'
+import type { PeerUpdate, Connection } from '@libp2p/interface'
 import { useCallback, useEffect, useState } from 'react'
 import Image from 'next/image'
 import { Multiaddr, multiaddr } from '@multiformats/multiaddr'
@@ -42,20 +42,6 @@ export default function Home() {
       libp2p.removeEventListener('self:peer:update', onPeerUpdate)
     }
   }, [libp2p, setListenAddresses])
-
-
-  useEffect(() => {
-    const onIdentify = (evt: CustomEvent<IdentifyResult>) => {
-      console.log("Identify protocols", evt.detail.peerId, evt.detail.protocols)
-    }
-
-    libp2p.addEventListener('peer:identify', onIdentify)
-
-    return () => {
-      libp2p.removeEventListener('peer:identify', onIdentify)
-    }
-  }, [libp2p])
-
 
   const handleConnectToMultiaddr = useCallback(
     async (e: React.MouseEvent<HTMLButtonElement>) => {
