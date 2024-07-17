@@ -275,9 +275,9 @@ export default function ChatContainer() {
               />
               <button
                 onClick={handleFileSend}
-                disabled={roomId !== ''}
-                title={roomId !== '' ? "Unsupported in DM's " : 'Upload file'}
-                className={roomId !== '' ? 'cursor-not-allowed' : ''}
+                disabled={roomId !== PUBLIC_CHAT_ROOM_ID}
+                title={roomId === PUBLIC_CHAT_ROOM_ID ? 'Upload file' : "Unsupported in DM's" }
+                className={roomId === PUBLIC_CHAT_ROOM_ID ? '' : 'cursor-not-allowed'}
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"

@@ -81,7 +81,6 @@ export const ChatProvider = ({ children }: any) => {
   const { libp2p } = useLibp2pContext()
 
   const messageCB = (evt: CustomEvent<Message>) => {
-    console.log('messageCB', evt)
     // FIXME: Why does 'from' not exist on type 'Message'?
     const { topic, data } = evt.detail
 

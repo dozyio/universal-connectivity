@@ -1,9 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 
-import type { Libp2p } from '@libp2p/interface'
+import type { Libp2p, PubSub } from '@libp2p/interface'
 import { startLibp2p } from '../lib/libp2p'
 import { ChatProvider } from './chat-ctx'
-import { PubSub } from '@libp2p/interface-pubsub'
 import { Identify } from '@libp2p/identify'
 
 type Libp2pType = Libp2p<{ pubsub: PubSub; identify: Identify }>
