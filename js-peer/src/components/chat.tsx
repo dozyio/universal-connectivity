@@ -8,7 +8,7 @@ import { forComponent } from '@/lib/logger'
 import { ChatPeerList } from './chat-peer-list'
 import { ChevronLeftIcon } from '@heroicons/react/20/solid'
 import Blockies from 'react-18-blockies'
-import { directMessageRequest } from './direct-message'
+import { handleSendDirectMessage } from './direct-message'
 import { peerIdFromString } from '@libp2p/peer-id'
 
 const log = forComponent('chat')
@@ -60,7 +60,7 @@ export default function ChatContainer() {
   // Send direct message over custom protocol
   const sendDirectMessage = useCallback(async () => {
     try {
-      const res = await directMessageRequest({
+      const res = await handleSendDirectMessage({
         libp2p,
         peerId: peerIdFromString(roomId),
         message: input,

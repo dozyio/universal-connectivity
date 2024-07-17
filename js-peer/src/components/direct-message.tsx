@@ -1,22 +1,32 @@
-import { Libp2p, PeerId, Stream } from '@libp2p/interface'
+import { Libp2p, PeerId, Stream, Connection } from '@libp2p/interface'
 import { DIRECT_MESSAGE_PROTOCOL } from '@/lib/constants'
 import { dm } from '@/lib/protobuf/direct-message'
 import { pbStream } from 'it-protobuf-stream'
 
-interface Params {
+export const directMessageEvent = 'directMessageEvt'
+
+export interface DirectMessageEvent {
+  content: string
+  type: string
+  stream: Stream
+  connection: Connection
+}
+
+export const dmClientVersion = '0.0.1'
+
+export const mimeTextPlain = 'text/plain'
+
+interface Props {
   libp2p: Libp2p
   peerId: PeerId
   message: string
 }
 
-export const dmVersion = '0.0.1'
-
-// directMessageRequest dials and sends a direct message to a peer.
-export const directMessageRequest = async ({
+export const handleSendDirectMessage = async ({
   libp2p,
   peerId,
   message,
-}: Params): Promise<boolean> => {
+}: Props): Promise<boolean> => {
   if (!message) {
     throw new Error('empty message')
   }
@@ -33,9 +43,10 @@ export const directMessageRequest = async ({
     const datastream = pbStream(stream)
 
     const req: dm.DirectMessageRequest = {
-      message: message,
-      meta: {
-        clientVersion: dmVersion,
+      content: message,
+      type: mimeTextPlain,
+      metadata: {
+        clientVersion: dmClientVersion,
         timestamp: BigInt(Date.now()),
       },
     }
@@ -48,7 +59,7 @@ export const directMessageRequest = async ({
       throw new Error('no response')
     }
 
-    if (!res.meta) {
+    if (!res.metadata) {
       throw new Error('no meta')
     }
 
@@ -68,4 +79,31 @@ export const directMessageRequest = async ({
   }
 
   return true
+}
+
+export const handleInboundDirectMessage = async (stream: Stream, connection: Connection) => {
+  const datastream = pbStream(stream)
+
+  const req = await datastream.read(dm.DirectMessageRequest)
+
+  const res: dm.DirectMessageResponse = {
+    status: dm.Status.OK,
+    metadata: {
+      clientVersion: dmClientVersion,
+      timestamp: BigInt(Date.now()),
+    },
+  }
+
+  await datastream.write(res, dm.DirectMessageResponse)
+
+  const detail = {
+    content: req.content,
+    type: req.type,
+    stream: stream,
+    connection: connection
+  } as DirectMessageEvent
+
+  document.dispatchEvent(
+    new CustomEvent(directMessageEvent, { detail })
+  )
 }

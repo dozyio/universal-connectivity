@@ -57,17 +57,17 @@ export namespace dm {
     }
   }
 
-  export interface Meta {
+  export interface Metadata {
     clientVersion: string
     timestamp: bigint
   }
 
-  export namespace Meta {
-    let _codec: Codec<Meta>
+  export namespace Metadata {
+    let _codec: Codec<Metadata>
 
-    export const codec = (): Codec<Meta> => {
+    export const codec = (): Codec<Metadata> => {
       if (_codec == null) {
-        _codec = message<Meta>((obj, w, opts = {}) => {
+        _codec = message<Metadata>((obj, w, opts = {}) => {
           if (opts.lengthDelimited !== false) {
             w.fork()
           }
@@ -119,12 +119,12 @@ export namespace dm {
       return _codec
     }
 
-    export const encode = (obj: Partial<Meta>): Uint8Array => {
-      return encodeMessage(obj, Meta.codec())
+    export const encode = (obj: Partial<Metadata>): Uint8Array => {
+      return encodeMessage(obj, Metadata.codec())
     }
 
-    export const decode = (buf: Uint8Array | Uint8ArrayList, opts?: DecodeOptions<Meta>): Meta => {
-      return decodeMessage(buf, Meta.codec(), opts)
+    export const decode = (buf: Uint8Array | Uint8ArrayList, opts?: DecodeOptions<Metadata>): Metadata => {
+      return decodeMessage(buf, Metadata.codec(), opts)
     }
   }
 
@@ -147,8 +147,9 @@ export namespace dm {
   }
 
   export interface DirectMessageRequest {
-    meta?: dm.Meta
-    message: string
+    metadata?: dm.Metadata
+    content: string
+    type: string
   }
 
   export namespace DirectMessageRequest {
@@ -161,14 +162,19 @@ export namespace dm {
             w.fork()
           }
 
-          if (obj.meta != null) {
+          if (obj.metadata != null) {
             w.uint32(10)
-            dm.Meta.codec().encode(obj.meta, w)
+            dm.Metadata.codec().encode(obj.metadata, w)
           }
 
-          if ((obj.message != null && obj.message !== '')) {
+          if ((obj.content != null && obj.content !== '')) {
             w.uint32(18)
-            w.string(obj.message)
+            w.string(obj.content)
+          }
+
+          if ((obj.type != null && obj.type !== '')) {
+            w.uint32(26)
+            w.string(obj.type)
           }
 
           if (opts.lengthDelimited !== false) {
@@ -176,7 +182,8 @@ export namespace dm {
           }
         }, (reader, length, opts = {}) => {
           const obj: any = {
-            message: ''
+            content: '',
+            type: ''
           }
 
           const end = length == null ? reader.len : reader.pos + length
@@ -186,13 +193,17 @@ export namespace dm {
 
             switch (tag >>> 3) {
               case 1: {
-                obj.meta = dm.Meta.codec().decode(reader, reader.uint32(), {
-                  limits: opts.limits?.meta
+                obj.metadata = dm.Metadata.codec().decode(reader, reader.uint32(), {
+                  limits: opts.limits?.metadata
                 })
                 break
               }
               case 2: {
-                obj.message = reader.string()
+                obj.content = reader.string()
+                break
+              }
+              case 3: {
+                obj.type = reader.string()
                 break
               }
               default: {
@@ -219,7 +230,7 @@ export namespace dm {
   }
 
   export interface DirectMessageResponse {
-    meta?: dm.Meta
+    metadata?: dm.Metadata
     status: dm.Status
     statusText?: string
   }
@@ -234,9 +245,9 @@ export namespace dm {
             w.fork()
           }
 
-          if (obj.meta != null) {
+          if (obj.metadata != null) {
             w.uint32(10)
-            dm.Meta.codec().encode(obj.meta, w)
+            dm.Metadata.codec().encode(obj.metadata, w)
           }
 
           if (obj.status != null && __StatusValues[obj.status] !== 0) {
@@ -264,8 +275,8 @@ export namespace dm {
 
             switch (tag >>> 3) {
               case 1: {
-                obj.meta = dm.Meta.codec().decode(reader, reader.uint32(), {
-                  limits: opts.limits?.meta
+                obj.metadata = dm.Metadata.codec().decode(reader, reader.uint32(), {
+                  limits: opts.limits?.metadata
                 })
                 break
               }

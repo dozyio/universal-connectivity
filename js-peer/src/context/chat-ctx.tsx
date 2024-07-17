@@ -8,7 +8,7 @@ import { pipe } from 'it-pipe'
 import map from 'it-map'
 import * as lp from 'it-length-prefixed'
 import { forComponent } from '@/lib/logger'
-import { dmVersion } from '@/components/direct-message'
+import { DirectMessageEvent, directMessageEvent, dmClientVersion, handleInboundDirectMessage, mimeTextPlain } from '@/components/direct-message'
 import { dm } from '@/lib/protobuf/direct-message'
 import { pbStream } from 'it-protobuf-stream'
 
@@ -69,8 +69,6 @@ export const chatContext = createContext<ChatContextInterface>({
 export const useChatContext = () => {
   return useContext(chatContext)
 }
-
-export const directMessageEvent = 'directMessageEvt'
 
 export const ChatProvider = ({ children }: any) => {
   const [messageHistory, setMessageHistory] = useState<ChatMessage[]>([]);
@@ -174,13 +172,15 @@ export const ChatProvider = ({ children }: any) => {
   }
 
   useEffect(() => {
-    const handleDirectMessage = async (event: any) => {
-      console.debug(directMessageEvent, event)
+    const handleDirectMessage = async (evt: CustomEvent<DirectMessageEvent>) => {
+      const peerId = evt.detail.connection.remotePeer.toString()
 
-      const peerId = event.detail.connection.remotePeer.toString()
+      if (evt.detail.type !== mimeTextPlain) {
+        throw new Error(`unexpected message type: ${evt.detail.type}`)
+      }
 
       const message: ChatMessage = {
-        msg: event.detail.request,
+        msg: evt.detail.content,
         from: 'other',
         read: false,
         msgId: crypto.randomUUID(),
@@ -199,10 +199,14 @@ export const ChatProvider = ({ children }: any) => {
       })
     }
 
-    document.addEventListener(directMessageEvent, handleDirectMessage)
+    const eventListener = (evt: Event) => {
+      handleDirectMessage(evt as CustomEvent<DirectMessageEvent>);
+    };
+
+    document.addEventListener(directMessageEvent, eventListener)
 
     return () => {
-      document.removeEventListener(directMessageEvent, handleDirectMessage)
+      document.removeEventListener(directMessageEvent, eventListener)
     }
   }, [directMessages, setDirectMessages])
 
@@ -234,29 +238,7 @@ export const ChatProvider = ({ children }: any) => {
 
   useEffect(() => {
     libp2p.handle(DIRECT_MESSAGE_PROTOCOL, async ({ stream, connection }) => {
-      const datastream = pbStream(stream)
-
-      const req = await datastream.read(dm.DirectMessageRequest)
-
-      const res: dm.DirectMessageResponse = {
-        status: dm.Status.OK,
-        meta: {
-          clientVersion: dmVersion,
-          timestamp: BigInt(Date.now()),
-        },
-      }
-
-      const eventDetails = {
-        request: req.message,
-        stream: stream,
-        connection: connection,
-      }
-
-      document.dispatchEvent(
-        new CustomEvent(directMessageEvent, { detail: eventDetails }),
-      )
-
-      await datastream.write(res, dm.DirectMessageResponse)
+      handleInboundDirectMessage(stream, connection)
     })
 
     return () => {
