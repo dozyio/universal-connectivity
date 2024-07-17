@@ -1,6 +1,6 @@
 import { useLibp2pContext } from '@/context/ctx'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { CHAT_FILE_TOPIC, CHAT_TOPIC, FILE_EXCHANGE_PROTOCOL } from '@/lib/constants'
+import { CHAT_FILE_TOPIC, CHAT_TOPIC } from '@/lib/constants'
 import { ChatFile, ChatMessage, useChatContext } from '../context/chat-ctx'
 import { v4 as uuidv4 } from 'uuid'
 import { Message } from './message'
@@ -268,8 +268,19 @@ export default function ChatContainer() {
             </div>
 
             <div className="flex items-center justify-between w-full p-3 border-t border-gray-300">
-              <input ref={fileRef} className="hidden" type="file" onChange={handleFileInput} />
-              <button onClick={handleFileSend}>
+              <input
+                ref={fileRef}
+                className="hidden"
+                type="file"
+                onChange={handleFileInput}
+                disabled={roomId !== PUBLIC_CHAT_ROOM_ID}
+              />
+              <button
+                onClick={handleFileSend}
+                disabled={roomId !== ''}
+                title={roomId !== '' ? "Unsupported in DM's " : 'Upload file'}
+                className={roomId !== '' ? 'cursor-not-allowed' : ''}
+              >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   className="w-5 h-5 text-gray-500"

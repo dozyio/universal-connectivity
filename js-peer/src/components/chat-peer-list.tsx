@@ -10,7 +10,7 @@ export function ChatPeerList() {
 
   useEffect(() => {
     const onSubscriptionChange = () => {
-      const subscribers = libp2p.services.pubsub.getSubscribers(CHAT_TOPIC)
+      const subscribers = libp2p.services.pubsub.getSubscribers(CHAT_TOPIC) as PeerId[]
       setSubscribers(subscribers)
     }
     onSubscriptionChange()

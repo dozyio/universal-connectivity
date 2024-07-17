@@ -5,6 +5,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "tsc": "tsc --noEmit -p tsconfig.json",
     "protobuf": "protons src/lib/protobuf/*.proto"
   },
   "dependencies": {

@@ -11,31 +11,38 @@ import { classNames } from "@/lib/classes"
 interface MenuItemProps {
   protocol: string
   peerId: PeerId
+  state: {
+    dialing: boolean
+    setDialing: (dialing: boolean) => void
+    error: string
+    setError: (error: string) => void
+  }
 }
 
 const QUERY = 'QUERY'
 
-export function ProtocolMenuItem({ protocol, peerId }: MenuItemProps) {
+export function ProtocolMenuItem({ protocol, peerId, state }: MenuItemProps) {
   const { setRoomId } = useChatContext()
 
   const handleSetRoomId = () => {
     setRoomId(peerId.toString())
   }
-
-  const [dialing, setDialing] = useState(false)
   const { libp2p } = useLibp2pContext()
 
   const handleQuery = async () => {
     try {
-      console.log('Dialing', peerId.toString())
-      setDialing(true)
-      const conn = await libp2p.dial(peerId)
+      state.setError('')
+      state.setDialing(true)
 
-      // await conn.close()
+      console.log('Dialing', peerId.toString())
+
+      // const conn = await libp2p.dial(peerId)
+      await libp2p.dial(peerId)
     } catch (e) {
+      state.setError(`${e}`)
       console.error('Failed to dial', e)
     } finally {
-      setDialing(false)
+      state.setDialing(false)
     }
   }
 
@@ -50,7 +57,9 @@ export function ProtocolMenuItem({ protocol, peerId }: MenuItemProps) {
             )}
             onClick={() => handleQuery()}
           >
-            Get Protocols
+          {state.dialing && 'Dialing'}
+          {!state.dialing && state.error && `Retry (${state.error})`}
+          {!state.dialing && !state.error && 'Dial'}
           </span>
         )}
       </MenuItem>
@@ -85,16 +94,16 @@ export interface PeerProps {
 
 export function Peer({ peer, self, withName, withUnread }: PeerProps ) {
   const { libp2p } = useLibp2pContext()
-  const { directMessages, setRoomId } = useChatContext()
+  const { directMessages } = useChatContext()
   const [commsProtocols, setCommsProtocols] = useState<string[]>([''])
   const [allProtocols, setAllProtocols] = useState<string[]>([''])
+  const [ dialing, setDialing ] = useState(false)
+  const [ error, setError ] = useState('')
 
   useEffect(() => {
     const init = async () => {
       if (await libp2p.peerStore.has(peerIdFromString(peer.toString()))) {
-        console.log('Peer found in peerStore')
         const p = await libp2p.peerStore.get(peerIdFromString(peer.toString()))
-        console.log(peer.toString(), p.protocols)
 
         setCommsProtocols(
           p.protocols.filter(
@@ -107,7 +116,7 @@ export function Peer({ peer, self, withName, withUnread }: PeerProps ) {
 
         setAllProtocols(p.protocols)
       } else {
-        console.log('Peer not in peerStore')
+        console.log('Peer not in peerStore', peer.toString())
         setCommsProtocols([QUERY])
       }
     }
@@ -156,6 +165,7 @@ export function Peer({ peer, self, withName, withUnread }: PeerProps ) {
                         key={protocol}
                         protocol={protocol}
                         peerId={peer}
+                        state={{ dialing, setDialing, error, setError }}
                       />
                     )
                   })}

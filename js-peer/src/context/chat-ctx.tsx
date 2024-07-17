@@ -73,8 +73,8 @@ export const useChatContext = () => {
 export const directMessageEvent = 'directMessageEvt'
 
 export const ChatProvider = ({ children }: any) => {
-	const [messageHistory, setMessageHistory] = useState<ChatMessage[]>([]);
-    const [directMessages, setDirectMessages] = useState<DirectMessages>({})
+  const [messageHistory, setMessageHistory] = useState<ChatMessage[]>([]);
+  const [directMessages, setDirectMessages] = useState<DirectMessages>({})
   const [files, setFiles] = useState<Map<string, ChatFile>>(new Map<string, ChatFile>());
   const [roomId, setRoomId] = useState<Chatroom>('')
 
@@ -102,6 +102,14 @@ export const ChatProvider = ({ children }: any) => {
       }
     }
   }
+
+  const messageCBWrapper = (evt: Event) => {
+    const customEvent = evt as CustomEvent<Message>
+
+      ; (async () => messageCB(customEvent))()
+  }
+
+
 
   const chatMessageCB = (evt: CustomEvent<Message>, topic: string, data: Uint8Array) => {
     const msg = new TextDecoder().decode(data)
@@ -200,7 +208,7 @@ export const ChatProvider = ({ children }: any) => {
   }, [directMessages, setDirectMessages])
 
   useEffect(() => {
-    libp2p.services.pubsub.addEventListener('message', messageCB)
+    libp2p.services.pubsub.addEventListener('message', messageCBWrapper)
 
     libp2p.handle(FILE_EXCHANGE_PROTOCOL, ({ stream }) => {
       pipe(
@@ -219,7 +227,7 @@ export const ChatProvider = ({ children }: any) => {
     return () => {
       (async () => {
         // Cleanup handlers 👇
-        libp2p.services.pubsub.removeEventListener('message', messageCB)
+        libp2p.services.pubsub.removeEventListener('message', messageCBWrapper)
         await libp2p.unhandle(FILE_EXCHANGE_PROTOCOL)
       })();
     }
@@ -231,7 +239,7 @@ export const ChatProvider = ({ children }: any) => {
 
       const req = await datastream.read(dm.DirectMessageRequest)
 
-      const res: dm.DirectMessageResponse= {
+      const res: dm.DirectMessageResponse = {
         status: dm.Status.OK,
         meta: {
           clientVersion: clientVersion,
@@ -261,8 +269,8 @@ export const ChatProvider = ({ children }: any) => {
   })
 
 
-	return (
-		<chatContext.Provider
+  return (
+    <chatContext.Provider
       value={{
         roomId,
         setRoomId,
@@ -273,7 +281,7 @@ export const ChatProvider = ({ children }: any) => {
         files,
         setFiles
       }}>
-			{children}
-		</chatContext.Provider>
-	);
+      {children}
+    </chatContext.Provider>
+  );
 };

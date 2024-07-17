@@ -2,15 +2,15 @@ import {
   createDelegatedRoutingV1HttpApiClient,
   DelegatedRoutingV1HttpApiClient,
 } from '@helia/delegated-routing-v1-http-api-client'
-import { createLibp2p, Libp2p } from 'libp2p'
-import { identify } from '@libp2p/identify'
+import { createLibp2p } from 'libp2p'
+import { Identify, identify } from '@libp2p/identify'
 import { peerIdFromString } from '@libp2p/peer-id'
 import { noise } from '@chainsafe/libp2p-noise'
 import { yamux } from '@chainsafe/libp2p-yamux'
 import { bootstrap } from '@libp2p/bootstrap'
 import { Multiaddr } from '@multiformats/multiaddr'
 import { sha256 } from 'multiformats/hashes/sha2'
-import type { Connection, Message, SignedMessage, PeerId } from '@libp2p/interface'
+import type { Connection, Message, SignedMessage, PeerId, Libp2p } from '@libp2p/interface'
 import { gossipsub } from '@chainsafe/libp2p-gossipsub'
 import { webSockets } from '@libp2p/websockets'
 import { webTransport } from '@libp2p/webtransport'
@@ -20,80 +20,93 @@ import { pubsubPeerDiscovery } from '@libp2p/pubsub-peer-discovery'
 import { BOOTSTRAP_PEER_IDS, CHAT_FILE_TOPIC, CHAT_TOPIC, PUBSUB_PEER_DISCOVERY } from './constants'
 import first from 'it-first'
 import { forComponent } from './logger'
+import { PubSub } from '@libp2p/interface-pubsub'
 
 const log = forComponent('libp2p')
 
-export async function startLibp2p() {
+export async function startLibp2p(): Promise<Libp2p<{ pubsub: PubSub; identify: Identify }>> {
   // enable verbose logging in browser console to view debug logs
   localStorage.debug = 'ui*,libp2p*,-libp2p:connection-manager*,-*:trace'
 
   const delegatedClient = createDelegatedRoutingV1HttpApiClient('https://delegated-ipfs.dev')
+
   const { bootstrapAddrs, relayListenAddrs } = await getBootstrapMultiaddrs(delegatedClient)
   log('starting libp2p with bootstrapAddrs %o and relayListenAddrs: %o', bootstrapAddrs, relayListenAddrs)
 
-  const libp2p = await createLibp2p({
-    addresses: {
-      listen: [
-        // 👇 Listen for webRTC connection
-        '/webrtc',
-        // Use the app's bootstrap nodes as circuit relays
-        ...relayListenAddrs,
+  let libp2p: Libp2p<{ pubsub: PubSub; identify: Identify }>
+
+  try {
+    libp2p = await createLibp2p({
+      addresses: {
+        listen: [
+          // 👇 Listen for webRTC connection
+          '/webrtc',
+          // Use the app's bootstrap nodes as circuit relays
+          ...relayListenAddrs,
+        ],
+      },
+      transports: [
+        webTransport(),
+        webSockets(),
+        webRTC({
+          rtcConfiguration: {
+            iceServers: [
+              {
+                // STUN servers help the browser discover its own public IPs
+                urls: ['stun:stun.l.google.com:19302', 'stun:global.stun.twilio.com:3478'],
+              },
+            ],
+          },
+        }),
+        // 👇 Required to estalbish connections with peers supporting WebRTC-direct, e.g. the Rust-peer
+        webRTCDirect(),
+        // 👇 Required to create circuit relay reservations in order to hole punch browser-to-browser WebRTC connections
+        circuitRelayTransport({
+          // When set to >0, this will look up the magic CID in order to discover circuit relay peers it can create a reservation with
+          discoverRelays: 0,
+        }),
       ],
-    },
-    transports: [
-      webTransport(),
-      webSockets(),
-      webRTC({
-        rtcConfiguration: {
-          iceServers: [
-            {
-              // STUN servers help the browser discover its own public IPs
-              urls: ['stun:stun.l.google.com:19302', 'stun:global.stun.twilio.com:3478'],
-            },
-          ],
-        },
-      }),
-      // 👇 Required to estalbish connections with peers supporting WebRTC-direct, e.g. the Rust-peer
-      webRTCDirect(),
-      // 👇 Required to create circuit relay reservations in order to hole punch browser-to-browser WebRTC connections
-      circuitRelayTransport({
-        // When set to >0, this will look up the magic CID in order to discover circuit relay peers it can create a reservation with
-        discoverRelays: 0,
-      }),
-    ],
-    connectionManager: {
-      maxConnections: 30,
-      minConnections: 5,
-    },
-    connectionEncryption: [noise()],
-    streamMuxers: [yamux()],
-    connectionGater: {
-      denyDialMultiaddr: async () => false,
-    },
-    peerDiscovery: [
-      pubsubPeerDiscovery({
-        interval: 10_000,
-        topics: [PUBSUB_PEER_DISCOVERY],
-        listenOnly: false,
-      }),
-      bootstrap({
-        // The app-specific go and rust bootstrappers use WebTransport and WebRTC-direct which have ephemeral multiadrrs
-        // that are resolved above using the delegated routing API
-        list: bootstrapAddrs,
-      }),
-    ],
-    services: {
-      pubsub: gossipsub({
-        allowPublishToZeroTopicPeers: true,
-        msgIdFn: msgIdFnStrictNoSign,
-        ignoreDuplicatePublishError: true,
-      }),
-      // Delegated routing helps us discover the ephemeral multiaddrs of the dedicated go and rust bootstrap peers
-      // This relies on the public delegated routing endpoint https://docs.ipfs.tech/concepts/public-utilities/#delegated-routing
-      delegatedRouting: () => delegatedClient,
-      identify: identify(),
-    },
-  })
+      connectionManager: {
+        maxConnections: 30,
+        minConnections: 5,
+      },
+      connectionEncryption: [noise()],
+      streamMuxers: [yamux()],
+      connectionGater: {
+        denyDialMultiaddr: async () => false,
+      },
+      peerDiscovery: [
+        pubsubPeerDiscovery({
+          interval: 10_000,
+          topics: [PUBSUB_PEER_DISCOVERY],
+          listenOnly: false,
+        }),
+        bootstrap({
+          // The app-specific go and rust bootstrappers use WebTransport and WebRTC-direct which have ephemeral multiadrrs
+          // that are resolved above using the delegated routing API
+          list: bootstrapAddrs,
+        }),
+      ],
+      services: {
+        pubsub: gossipsub({
+          allowPublishToZeroTopicPeers: true,
+          msgIdFn: msgIdFnStrictNoSign,
+          ignoreDuplicatePublishError: true,
+        }),
+        // Delegated routing helps us discover the ephemeral multiaddrs of the dedicated go and rust bootstrap peers
+        // This relies on the public delegated routing endpoint https://docs.ipfs.tech/concepts/public-utilities/#delegated-routing
+        delegatedRouting: () => delegatedClient,
+        identify: identify(),
+      },
+    })
+
+    if (!libp2p) {
+      throw new Error('Failed to create libp2p node')
+    }
+  } catch (e) {
+    console.log(e)
+    throw e
+  }
 
   libp2p.services.pubsub.subscribe(CHAT_TOPIC)
   libp2p.services.pubsub.subscribe(CHAT_FILE_TOPIC)
@@ -116,7 +129,7 @@ export async function startLibp2p() {
   //   dialWebRTCMaddrs(libp2p, multiaddrs)
   // })
 
-  return libp2p
+  return libp2p as Libp2p<{ pubsub: PubSub; identify: Identify }>
 }
 
 // message IDs are used to dedupe inbound messages
