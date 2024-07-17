@@ -8,9 +8,9 @@ import { pipe } from 'it-pipe'
 import map from 'it-map'
 import * as lp from 'it-length-prefixed'
 import { forComponent } from '@/lib/logger'
-import { toBuffer } from '@/lib/buffer'
-import { directMessageRequestProcessChunk, directMessageResponse } from '@/components/direct-message';
+import { clientVersion } from '@/components/direct-message';
 import { dm } from '@/lib/protobuf/direct-message'
+import { pbStream } from 'it-protobuf-stream';
 
 const log = forComponent('chat-context')
 
@@ -227,36 +227,29 @@ export const ChatProvider = ({ children }: any) => {
 
   useEffect(() => {
     libp2p.handle(DIRECT_MESSAGE_PROTOCOL, async ({ stream, connection }) => {
-      pipe(
-        stream.source, // Source, read data from the stream
-        async function (source) {
-          let reqData
+      const datastream = pbStream(stream)
 
-          for await (const chunk of source) {
-            reqData = await directMessageRequestProcessChunk(chunk)
-          }
+      const req = await datastream.read(dm.DirectMessageRequest)
 
-          const eventDetails = {
-            request: reqData,
-            stream: stream,
-            connection: connection,
-          }
-
-          document.dispatchEvent(
-            new CustomEvent(directMessageEvent, { detail: eventDetails }),
-          )
+      const res: dm.DirectMessageResponse= {
+        status: dm.Status.OK,
+        meta: {
+          clientVersion: clientVersion,
+          timestamp: BigInt(Date.now()),
         },
+      }
+
+      const eventDetails = {
+        request: req.message,
+        stream: stream,
+        connection: connection,
+      }
+
+      document.dispatchEvent(
+        new CustomEvent(directMessageEvent, { detail: eventDetails }),
       )
 
-      const signedEncodedRes = await directMessageResponse(
-        libp2p,
-        dm.Status.OK,
-      )
-
-      await pipe(
-        [signedEncodedRes], // array of Uint8Array to send
-        stream.sink, // Sink, write data to the stream
-      )
+      await datastream.write(res, dm.DirectMessageResponse)
     })
 
     return () => {

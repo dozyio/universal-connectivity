@@ -6,9 +6,7 @@ import { ChatProvider } from './chat-ctx'
 import { PubSub } from '@libp2p/interface'
 import { Identify } from '@libp2p/identify'
 
-type Libp2pType = Libp2p<{ pubsub: PubSub; identify: Identify }>
-
-export const libp2pContext = createContext<{ libp2p: Libp2pType }>({
+export const libp2pContext = createContext<{ libp2p: Libp2p }>({
   // @ts-ignore to avoid having to check isn't undefined everywhere. Can't be undefined because children are conditionally rendered
   libp2p: undefined,
 })
@@ -20,7 +18,7 @@ interface WrapperProps {
 // This is needed to prevent libp2p from instantiating more than once
 let loaded = false
 export function AppWrapper({ children }: WrapperProps) {
-  const [libp2p, setLibp2p] = useState<Libp2pType>()
+  const [libp2p, setLibp2p] = useState<Libp2p | undefined>()
 
   useEffect(() => {
     const init = async () => {
@@ -32,7 +30,12 @@ export function AppWrapper({ children }: WrapperProps) {
         // @ts-ignore
         window.libp2p = libp2p
 
-        setLibp2p(libp2p)
+        setLibp2p(libp2p as Libp2p<{
+            pubsub: PubSub
+            identify: Identify
+          }>
+         )
+
       } catch (e) {
         console.error('failed to start libp2p', e)
       }
