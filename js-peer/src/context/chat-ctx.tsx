@@ -16,7 +16,6 @@ export interface ChatMessage {
   msgId: string
   msg: string
   fileObjectUrl: string | undefined
-  from: 'me' | 'other'
   peerId: string
   read: boolean
   receivedAt: number
@@ -110,7 +109,6 @@ export const ChatProvider = ({ children }: any) => {
           msgId: crypto.randomUUID(),
           msg,
           fileObjectUrl: undefined,
-          from: 'other',
           peerId: evt.detail.from.toString(),
           read: false,
           receivedAt: Date.now(),
@@ -147,7 +145,6 @@ export const ChatProvider = ({ children }: any) => {
               msgId: crypto.randomUUID(),
               msg: newChatFileMessage(fileId, body),
               fileObjectUrl: window.URL.createObjectURL(new Blob([body])),
-              from: 'other',
               peerId: senderPeerId.toString(),
               read: false,
               receivedAt: Date.now(),
@@ -171,7 +168,6 @@ export const ChatProvider = ({ children }: any) => {
 
       const message: ChatMessage = {
         msg: evt.detail.content,
-        from: 'other',
         read: false,
         msgId: crypto.randomUUID(),
         fileObjectUrl: undefined,
