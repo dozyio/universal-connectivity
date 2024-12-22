@@ -106,9 +106,14 @@ async function msgIdFnStrictNoSign(msg: Message): Promise<Uint8Array> {
       process.exit(1)
     }
 
-    let port = '0'
-    if (process.env.PORT !== undefined) {
-      port = process.env.PORT
+    let tcpPort = '0'
+    if (process.env.TCP_PORT !== undefined) {
+      tcpPort = process.env.TCP_PORT
+    }
+
+    let wsPort = '0'
+    if (process.env.WS_PORT !== undefined) {
+      wsPort = process.env.WS_PORT
     }
 
     // Recommend setting D settings to 0 for bootstrapper
@@ -195,10 +200,10 @@ async function msgIdFnStrictNoSign(msg: Message): Promise<Uint8Array> {
       privateKey,
       addresses: {
         listen: [
-          `/ip4/0.0.0.0/tcp/${port}`,
-          `/ip6/::/tcp/${port}`,
-          `/ip4/0.0.0.0/tcp/${port}/ws`,
-          `/ip6/::/tcp/${port}/ws`,
+          `/ip4/0.0.0.0/tcp/${tcpPort}`,
+          `/ip6/::/tcp/${tcpPort}`,
+          `/ip4/0.0.0.0/tcp/${wsPort}/ws`,
+          `/ip6/::/tcp/${wsPort}/ws`,
         ]
       },
       transports: [
