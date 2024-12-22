@@ -270,7 +270,7 @@ async function msgIdFnStrictNoSign(msg: Message): Promise<Uint8Array> {
       console.log('self:peer:update')
       if (event.detail?.peer?.addresses) {
         event.detail.peer.addresses.forEach((addr) => {
-          console.log('Listening On: ', addr.multiaddr.toString())
+          console.log(`Listening On: ${addr.multiaddr.toString()}/p2p/${server.peerId.toString()}`)
         })
       }
     })
