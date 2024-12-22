@@ -241,7 +241,7 @@ async function msgIdFnStrictNoSign(msg: Message): Promise<Uint8Array> {
         relay: circuitRelayServer(),
         keychain: keychain(),
         autoTLS: autoTLS({
-          acmeDirectory: 'https://acme-staging-v02.api.letsencrypt.org/directory',
+          // acmeDirectory: 'https://acme-staging-v02.api.letsencrypt.org/directory',
           autoConfirmAddress: true
         }),
         upnpNAT: uPnPNAT({
