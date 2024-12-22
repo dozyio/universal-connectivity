@@ -252,7 +252,12 @@ async function msgIdFnStrictNoSign(msg: Message): Promise<Uint8Array> {
     const server: Libp2pType = await createLibp2p(libp2pConfig) as Libp2pType
 
     server.addEventListener('self:peer:update', (event) => {
-      console.log('self:peer:update', event.detail.peer.addresses)
+      console.log('self:peer:update')
+      if (event.detail?.peer?.addresses) {
+        event.detail.peer.addresses.forEach((addr) => {
+          console.log('Listening On: ', addr.multiaddr.toString())
+        })
+      }
     })
 
     server.addEventListener('certificate:provision', () => {
