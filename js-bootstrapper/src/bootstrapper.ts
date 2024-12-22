@@ -287,7 +287,7 @@ async function msgIdFnStrictNoSign(msg: Message): Promise<Uint8Array> {
       server.services.pubsub.subscribe(topics[i])
     }
 
-    console.log('Bootstrapper listening on multiaddr(s): ', server.getMultiaddrs().map((ma: Multiaddr) => ma.toString()))
+    // console.log('Bootstrapper listening on multiaddr(s): ', server.getMultiaddrs().map((ma: Multiaddr) => ma.toString()))
 
     const shutdown = async () => {
       process.exit(0)
