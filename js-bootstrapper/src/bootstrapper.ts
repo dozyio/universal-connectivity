@@ -26,6 +26,7 @@ import { uPnPNAT } from '@libp2p/upnp-nat'
 import { WebSocketsSecure } from '@multiformats/multiaddr-matcher'
 import { bootstrap } from '@libp2p/bootstrap'
 import { sha256 } from 'multiformats/hashes/sha2'
+import { tls } from '@libp2p/tls'
 
 const topicScoreCap = 50
 const topicWeight = 1
@@ -223,7 +224,7 @@ async function msgIdFnStrictNoSign(msg: Message): Promise<Uint8Array> {
         webRTCDirect(),
         circuitRelayTransport()
       ],
-      connectionEncrypters: [noise()],
+      connectionEncrypters: [noise(), tls()],
       streamMuxers: [yamux()],
       peerDiscovery: [
         pubsubPeerDiscovery()
