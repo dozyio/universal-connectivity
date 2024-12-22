@@ -1,0 +1,39 @@
+{
+  "name": "universal-connectivity-js-bootstrapper",
+  "type": "module",
+  "scripts": {
+    "build": "esbuild src/bootstrapper.ts --bundle --platform=node --target=node22 --outfile=dist/bootstrapper.mjs --format=esm --external:stream --external:ws --external:crypto --external:fs --external:http --external:https --external:path --external:url --external:zlib --packages=external",
+    "dev": "npm run build && node dist/bootstrapper.mjs",
+    "start": "next start",
+    "lint": "next lint",
+    "tsc": "tsc --noEmit -p tsconfig.json"
+  },
+  "devDependencies": {
+    "esbuild": "^0.24.1",
+    "typescript": "5.4.5"
+  },
+  "dependencies": {
+    "@chainsafe/libp2p-gossipsub": "^14.1.0",
+    "@chainsafe/libp2p-noise": "^16.0.0",
+    "@chainsafe/libp2p-yamux": "^7.0.1",
+    "@libp2p/auto-tls": "^1.0.2",
+    "@libp2p/autonat": "^2.0.15",
+    "@libp2p/bootstrap": "^11.0.16",
+    "@libp2p/circuit-relay-v2": "^3.1.6",
+    "@libp2p/config": "^1.0.0",
+    "@libp2p/identify": "^3.0.14",
+    "@libp2p/interface-pubsub": "^4.0.1",
+    "@libp2p/kad-dht": "^14.1.6",
+    "@libp2p/keychain": "^5.0.11",
+    "@libp2p/logger": "^5.1.5",
+    "@libp2p/ping": "^2.0.14",
+    "@libp2p/pubsub-peer-discovery": "^11.0.1",
+    "@libp2p/tcp": "^10.0.14",
+    "@libp2p/upnp-nat": "^3.0.3",
+    "@libp2p/webrtc": "^5.0.22",
+    "@libp2p/websockets": "^9.1.0",
+    "@multiformats/multiaddr": "^12.3.4",
+    "datastore-level": "^11.0.1",
+    "libp2p": "^2.4.2"
+  }
+}
