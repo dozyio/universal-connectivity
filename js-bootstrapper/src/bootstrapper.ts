@@ -106,14 +106,24 @@ async function msgIdFnStrictNoSign(msg: Message): Promise<Uint8Array> {
       process.exit(1)
     }
 
-    let tcpPort = '0'
-    if (process.env.TCP_PORT !== undefined) {
-      tcpPort = process.env.TCP_PORT
+    let ip4tcpPort = '0'
+    if (process.env.IP4_TCP_PORT !== undefined) {
+      ip4tcpPort = process.env.IP4_TCP_PORT
     }
 
-    let wsPort = '0'
-    if (process.env.WS_PORT !== undefined) {
-      wsPort = process.env.WS_PORT
+    let ip6tcpPort = '0'
+    if (process.env.IP6_TCP_PORT !== undefined) {
+      ip6tcpPort = process.env.IP6_TCP_PORT
+    }
+
+    let ip4wsPort = '0'
+    if (process.env.IP4_WS_PORT !== undefined) {
+      ip4wsPort = process.env.IP4_WS_PORT
+    }
+
+    let ip6wsPort = '0'
+    if (process.env.IP6_WS_PORT !== undefined) {
+      ip6wsPort = process.env.IP6_WS_PORT
     }
 
     // Recommend setting D settings to 0 for bootstrapper
@@ -200,10 +210,10 @@ async function msgIdFnStrictNoSign(msg: Message): Promise<Uint8Array> {
       privateKey,
       addresses: {
         listen: [
-          `/ip4/0.0.0.0/tcp/${tcpPort}`,
-          `/ip6/::/tcp/${tcpPort}`,
-          `/ip4/0.0.0.0/tcp/${wsPort}/ws`,
-          `/ip6/::/tcp/${wsPort}/ws`,
+          `/ip4/0.0.0.0/tcp/${ip4tcpPort}`,
+          `/ip6/::/tcp/${ip6tcpPort}`,
+          `/ip4/0.0.0.0/tcp/${ip4wsPort}/ws`,
+          `/ip6/::/tcp/${ip6wsPort}/ws`,
         ]
       },
       transports: [
