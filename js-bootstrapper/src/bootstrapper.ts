@@ -27,6 +27,7 @@ import { WebSocketsSecure } from '@multiformats/multiaddr-matcher'
 import { bootstrap } from '@libp2p/bootstrap'
 import { sha256 } from 'multiformats/hashes/sha2'
 import { tls } from '@libp2p/tls'
+import { PUBSUB_PEER_DISCOVERY } from './constants'
 
 const topicScoreCap = 50
 const topicWeight = 1
@@ -217,8 +218,8 @@ async function msgIdFnStrictNoSign(msg: Message): Promise<Uint8Array> {
       addresses: {
         listen: [
           `/ip4/0.0.0.0/tcp/${ip4tcpPort}`,
-          `/ip6/::/tcp/${ip6tcpPort}`,
           `/ip4/0.0.0.0/tcp/${ip4wsPort}/ws`,
+          `/ip6/::/tcp/${ip6tcpPort}`,
           `/ip6/::/tcp/${ip6wsPort}/ws`,
         ]
       },
@@ -232,7 +233,11 @@ async function msgIdFnStrictNoSign(msg: Message): Promise<Uint8Array> {
       connectionEncrypters: [noise(), tls()],
       streamMuxers: [yamux()],
       peerDiscovery: [
-        pubsubPeerDiscovery()
+        pubsubPeerDiscovery({
+          interval: 10_000,
+          topics: [PUBSUB_PEER_DISCOVERY],
+          listenOnly: false,
+        })
       ],
       connectionManager: {
         maxConnections: 500,
