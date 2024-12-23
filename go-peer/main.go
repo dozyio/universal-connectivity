@@ -144,7 +144,7 @@ func main() {
 			log.SetOutput(f)
 		}
 	} else {
-		log.SetOutput(io.Discard)
+		log.SetOutput(os.Stdout)
 	}
 
 	ctx := context.Background()
