@@ -20,7 +20,10 @@ import (
 	"github.com/libp2p/go-libp2p/p2p/discovery/mdns"
 	"github.com/libp2p/go-libp2p/p2p/discovery/routing"
 	discovery "github.com/libp2p/go-libp2p/p2p/discovery/util"
+	"github.com/libp2p/go-libp2p/p2p/muxer/yamux"
 	relayv2 "github.com/libp2p/go-libp2p/p2p/protocol/circuitv2/relay"
+	"github.com/libp2p/go-libp2p/p2p/security/noise"
+	securitytls "github.com/libp2p/go-libp2p/p2p/security/tls"
 	quicTransport "github.com/libp2p/go-libp2p/p2p/transport/quic"
 	"github.com/libp2p/go-libp2p/p2p/transport/tcp"
 	webrtc "github.com/libp2p/go-libp2p/p2p/transport/webrtc"
@@ -177,6 +180,11 @@ func main() {
 		libp2p.Transport(webtransport.New),
 		libp2p.Transport(webrtc.New),
 		libp2p.Transport(tcp.NewTCPTransport),
+		libp2p.Muxer(yamux.ID, yamux.DefaultTransport),
+		libp2p.ChainOptions(
+			libp2p.Security(securitytls.ID, securitytls.New),
+			libp2p.Security(noise.ID, noise.New),
+		),
 		libp2p.ListenAddrStrings(
 			"/ip4/0.0.0.0/udp/9095/quic-v1",
 			"/ip4/0.0.0.0/udp/9095/quic-v1/webtransport",
