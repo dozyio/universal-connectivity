@@ -22,6 +22,7 @@ import (
 	discovery "github.com/libp2p/go-libp2p/p2p/discovery/util"
 	relayv2 "github.com/libp2p/go-libp2p/p2p/protocol/circuitv2/relay"
 	quicTransport "github.com/libp2p/go-libp2p/p2p/transport/quic"
+	"github.com/libp2p/go-libp2p/p2p/transport/tcp"
 	webrtc "github.com/libp2p/go-libp2p/p2p/transport/webrtc"
 	ws "github.com/libp2p/go-libp2p/p2p/transport/websocket"
 	webtransport "github.com/libp2p/go-libp2p/p2p/transport/webtransport"
@@ -175,14 +176,15 @@ func main() {
 		libp2p.Transport(quicTransport.NewTransport),
 		libp2p.Transport(webtransport.New),
 		libp2p.Transport(webrtc.New),
+		libp2p.Transport(tcp.NewTCPTransport),
 		libp2p.ListenAddrStrings(
 			"/ip4/0.0.0.0/udp/9095/quic-v1",
 			"/ip4/0.0.0.0/udp/9095/quic-v1/webtransport",
 			"/ip4/0.0.0.0/udp/9095/webrtc-direct",
+			"/ip4/0.0.0.0/tcp/9095",
 			"/ip6/::/udp/9095/quic-v1",
 			"/ip6/::/udp/9095/quic-v1/webtransport",
 			"/ip6/::/udp/9095/webrtc-direct",
-			"/ip4/0.0.0.0/tcp/9095",
 			"/ip6/::/tcp/9095",
 		),
 	)
