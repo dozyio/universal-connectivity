@@ -182,6 +182,8 @@ func main() {
 			"/ip6/::/udp/9095/quic-v1",
 			"/ip6/::/udp/9095/quic-v1/webtransport",
 			"/ip6/::/udp/9095/webrtc-direct",
+			"/ip4/0.0.0.0/tcp/9095",
+			"/ip6/::/tcp/9095",
 		),
 	)
 
