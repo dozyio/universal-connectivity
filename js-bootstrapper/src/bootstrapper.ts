@@ -127,9 +127,9 @@ async function msgIdFnStrictNoSign(msg: Message): Promise<Uint8Array> {
       ip6wsPort = process.env.IP6_WS_PORT
     }
 
-    let announceIP4: string | undefined = undefined
-    if (process.env.ANNOUNCE_IP4 !== undefined) {
-      announceIP4 = process.env.ANNOUNCE_IP4
+    let ip4Announce: string | undefined = undefined
+    if (process.env.IP4_ANNOUNCE !== undefined) {
+      ip4Announce = process.env.IP4_ANNOUNCE
     }
 
     // Recommend setting D settings to 0 for bootstrapper
@@ -269,9 +269,9 @@ async function msgIdFnStrictNoSign(msg: Message): Promise<Uint8Array> {
       },
     }
 
-    if (announceIP4 && libp2pConfig.addresses) {
+    if (ip4Announce && libp2pConfig.addresses) {
       libp2pConfig.addresses.appendAnnounce = [
-        `/ip4/${announceIP4}/tcp/${ip4wsPort}/ws`
+        `/ip4/${ip4Announce}/tcp/${ip4wsPort}/ws`
       ]
     }
 
