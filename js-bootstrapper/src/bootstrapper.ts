@@ -252,7 +252,7 @@ async function msgIdFnStrictNoSign(msg: Message): Promise<Uint8Array> {
         // upnpNAT: uPnPNAT({
         //   autoConfirmAddress: true
         // }),
-        autoNAT: autoNAT(),
+        // autoNAT: autoNAT(),
         // aminoDHT: kadDHT({
         //   protocol: '/ipfs/kad/1.0.0',
         //   peerInfoMapper: removePrivateAddressesMapper
