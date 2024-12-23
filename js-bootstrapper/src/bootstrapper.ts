@@ -30,7 +30,7 @@ import { tls } from '@libp2p/tls'
 
 const CHAT_TOPIC = "universal-connectivity"
 const CHAT_FILE_TOPIC = "universal-connectivity-file"
-const PUBSUB_PEER_DISCOVERY =  "universal-connectivity-browser-peer-discovery"
+const PUBSUB_PEER_DISCOVERY = "universal-connectivity-browser-peer-discovery"
 
 const topicScoreCap = 50
 const topicWeight = 1
@@ -233,7 +233,7 @@ async function msgIdFnStrictNoSign(msg: Message): Promise<Uint8Array> {
         webRTCDirect(),
         circuitRelayTransport()
       ],
-      connectionEncrypters: [noise(), tls()],
+      connectionEncrypters: [noise()],
       streamMuxers: [yamux()],
       peerDiscovery: [
         pubsubPeerDiscovery({
