@@ -27,7 +27,10 @@ import { WebSocketsSecure } from '@multiformats/multiaddr-matcher'
 import { bootstrap } from '@libp2p/bootstrap'
 import { sha256 } from 'multiformats/hashes/sha2'
 import { tls } from '@libp2p/tls'
-import { PUBSUB_PEER_DISCOVERY } from './constants'
+
+const CHAT_TOPIC = "universal-connectivity"
+const CHAT_FILE_TOPIC = "universal-connectivity-file"
+const PUBSUB_PEER_DISCOVERY =  "universal-connectivity-browser-peer-discovery"
 
 const topicScoreCap = 50
 const topicWeight = 1
