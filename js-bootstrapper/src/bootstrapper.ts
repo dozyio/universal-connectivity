@@ -131,6 +131,16 @@ async function msgIdFnStrictNoSign(msg: Message): Promise<Uint8Array> {
       ip6wsPort = process.env.IP6_WS_PORT
     }
 
+    let publicIP4: string | undefined = undefined
+    if (process.env.PUBLIC_IP4 !== undefined) {
+      publicIP4 = process.env.PUBLIC_IP4
+    }
+
+    let publicIP6: string | undefined = undefined
+    if (process.env.PUBLIC_IP6 !== undefined) {
+      publicIP6 = process.env.PUBLIC_IP6
+    }
+
     let ip4Announce: string | undefined = undefined
     if (process.env.IP4_ANNOUNCE !== undefined) {
       ip4Announce = process.env.IP4_ANNOUNCE
@@ -219,12 +229,12 @@ async function msgIdFnStrictNoSign(msg: Message): Promise<Uint8Array> {
       datastore,
       privateKey,
       addresses: {
-        listen: [
-          `/ip4/0.0.0.0/tcp/${ip4tcpPort}`,
-          `/ip4/0.0.0.0/tcp/${ip4wsPort}/ws`,
-          `/ip6/::/tcp/${ip6tcpPort}`,
-          `/ip6/::/tcp/${ip6wsPort}/ws`,
-        ]
+        listen: []
+        //   `/ip4/0.0.0.0/tcp/${ip4tcpPort}`,
+        //   `/ip4/0.0.0.0/tcp/${ip4wsPort}/ws`,
+        //   `/ip6/::/tcp/${ip6tcpPort}`,
+        //   `/ip6/::/tcp/${ip6wsPort}/ws`,
+        // ]
       },
       transports: [
         tcp(),
@@ -275,6 +285,26 @@ async function msgIdFnStrictNoSign(msg: Message): Promise<Uint8Array> {
         //   ]
         // })
       },
+    }
+
+    if (publicIP4 && libp2pConfig.addresses && libp2pConfig.addresses.listen) {
+      libp2pConfig.addresses.listen.push(
+        `/ip4/${publicIP4}/tcp/${ip4tcpPort}`
+      )
+
+      libp2pConfig.addresses.listen.push(
+        `/ip4/${publicIP4}/tcp/${ip4wsPort}/ws`
+      )
+    }
+
+    if (publicIP6 && libp2pConfig.addresses && libp2pConfig.addresses.listen) {
+      libp2pConfig.addresses.listen.push(
+        `/ip4/${publicIP6}/tcp/${ip6tcpPort}`
+      )
+
+      libp2pConfig.addresses.listen.push(
+        `/ip4/${publicIP6}/tcp/${ip6wsPort}/ws`
+      )
     }
 
     if (ip4Announce && libp2pConfig.addresses) {
